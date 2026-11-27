@@ -1,0 +1,299 @@
+<title>Kindervoeding Proef</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Layout: één kolom, invoer bovenaan, vragen en resultaat eronder, opgeslagen maaltijden onderaan. */
+:root {
+  --bg: #F2F5F3; --surface: #FFFFFF; --ink: #15231E; --muted: #5A6963; --line: #D9E1DD;
+  --accent: #1E6B58; --on-accent: #FFFFFF; --accent-soft: #DCEDE7;
+  --ok: #2C7A4B; --ok-soft: #D9EEDF; --uit: #B2453A; --uit-soft: #F6DDD9; --twijfel: #A66A0C; --twijfel-soft: #F6E9CF;
+  --font: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0E1614; --surface: #17211E; --ink: #E5EDE9; --muted: #98A8A1; --line: #2A3833;
+  --accent: #5FC4A8; --on-accent: #0E1614; --accent-soft: #1D3A32;
+  --ok: #6CCB8E; --ok-soft: #1B3626; --uit: #EE8C80; --uit-soft: #3F211D; --twijfel: #E0AD55; --twijfel-soft: #3A2E15; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #0E1614; --surface: #17211E; --ink: #E5EDE9; --muted: #98A8A1; --line: #2A3833;
+  --accent: #5FC4A8; --on-accent: #0E1614; --accent-soft: #1D3A32;
+  --ok: #6CCB8E; --ok-soft: #1B3626; --uit: #EE8C80; --uit-soft: #3F211D; --twijfel: #E0AD55; --twijfel-soft: #3A2E15; color-scheme: dark }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.45 var(--font);
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+main { max-width: 34rem; margin: 0 auto; padding-block: 16px 40px; display: flex; flex-direction: column; gap: 14px; }
+h1 { font-size: 1.35rem; margin: 0; }
+h2 { font-size: .78rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 6px 0 0; font-weight: 600; }
+p { margin: 0; }
+.note { color: var(--muted); font-size: .92rem; }
+.warn { color: var(--uit); font-size: .92rem; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+textarea, input, select { font: inherit; color: inherit; width: 100%; min-width: 0; padding: 11px 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); }
+textarea { resize: vertical; min-height: 140px; }
+.row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.row > * { flex: 1 1 auto; }
+button { font: inherit; color: inherit; cursor: pointer; }
+.btn { border: 0; background: var(--accent); color: var(--on-accent); padding: 12px 16px; border-radius: 12px; font-weight: 600; min-height: 46px; }
+.btn:disabled { opacity: .5; }
+.btn.ghost { background: transparent; color: var(--accent); border: 1px solid var(--line); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.q { display: flex; flex-direction: column; gap: 8px; padding-block: 4px; }
+.q + .q { border-top: 1px solid var(--line); padding-top: 12px; }
+.q strong { font-weight: 600; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { border: 1px solid var(--line); background: var(--bg); padding: 8px 12px; border-radius: 99px; font-size: .92rem; min-height: 40px; }
+.chip[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); font-weight: 600; }
+.meal { display: flex; flex-direction: column; gap: 4px; }
+.meal + .meal { border-top: 1px solid var(--line); padding-top: 10px; }
+.mh { font-size: .75rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 600; }
+.it { display: flex; align-items: center; gap: 8px; font-size: .95rem; }
+.it .n { flex: 1; min-width: 0; overflow-wrap: anywhere; display: flex; flex-direction: column; }
+.it .n small { color: var(--muted); font-size: .8rem; }
+.it .g { color: var(--muted); font-size: .85rem; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.dot { width: 10px; height: 10px; border-radius: 50%; flex: none; background: var(--muted); }
+.dot.in { background: var(--ok); } .dot.uit { background: var(--uit); } .dot.twijfel { background: var(--twijfel); }
+.x { border: 0; background: none; color: var(--muted); font-size: 1.2rem; width: 36px; height: 36px; flex: none; }
+.legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: .8rem; color: var(--muted); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.saved .day { font-weight: 600; font-size: .9rem; margin-top: 4px; }
+[hidden] { display: none !important; }
+</style>
+
+<main>
+  <header><h1>Kindervoeding</h1><p class="note">Proefversie: typ of dicteer wat de kinderen aten.</p></header>
+  <p id="unavail" class="warn" hidden></p>
+
+  <section id="setup" class="card" hidden>
+    <h2>Kinderen</h2>
+    <p class="note">Naam (of bijnaam) en geboortemaand. Dit wordt bewaard in deze pagina.</p>
+    <div class="row"><input id="k1n" placeholder="Naam" aria-label="Naam kind 1"><input id="k1b" type="month" aria-label="Geboortemaand kind 1"></div>
+    <div class="row"><input id="k2n" placeholder="Naam" aria-label="Naam kind 2"><input id="k2b" type="month" aria-label="Geboortemaand kind 2"></div>
+    <button class="btn" id="saveKids">Opslaan</button>
+  </section>
+
+  <section id="entry" class="card" hidden>
+    <label for="text"><h2>Wat hebben ze gegeten?</h2></label>
+    <textarea id="text" placeholder="Bijv. Wouter at 2 boterhammen voor ontbijt, 1 met margarine en 1 met pindakaas. Daarna een mandarijn."></textarea>
+    <p class="note">Tip: tik op de microfoon van je toetsenbord om te dicteren.</p>
+    <div class="row"><input id="date" type="date" aria-label="Datum"><button class="btn" id="go">Verwerk</button></div>
+    <p id="status" class="note" hidden></p>
+    <button class="btn ghost" id="stop" hidden>Stop</button>
+  </section>
+
+  <section id="questions" class="card" hidden><h2>Nog even checken</h2><div id="qlist"></div></section>
+
+  <section id="result" class="card" hidden>
+    <h2>Dit wordt opgeslagen</h2>
+    <div class="legend"><span><i class="dot in"></i>In de Schijf</span><span><i class="dot uit"></i>Buiten de Schijf</span><span><i class="dot twijfel"></i>Onzeker</span></div>
+    <div id="meals"></div>
+    <div class="row"><button class="btn ghost" id="discard">Weggooien</button><button class="btn" id="save">Opslaan</button></div>
+  </section>
+
+  <section class="saved" aria-live="polite"><h2>Opgeslagen</h2><div id="saved"><p class="note">Laden…</p></div></section>
+</main>
+
+<script>
+const FOODS = /*FOODS*/[];
+const F = Object.fromEntries(FOODS.map(([id, name, vak, st, swap]) => [id, { id, name, vak, st, swap }]));
+const MOMENT = { ontbijt: 'Ontbijt', tussen: 'Tussendoor', lunch: 'Lunch', avond: 'Avondeten' };
+const ORDER = ['ontbijt', 'tussen', 'lunch', 'avond'];
+const rank = (m) => { const i = ORDER.indexOf(m); return i < 0 ? 9 : i; };
+const $ = (id) => document.getElementById(id);
+const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+const dotCls = (id) => ({ in: 'in', uit: 'uit', '?': 'twijfel' }[F[id]?.st] || 'twijfel');
+const localIso = (d = new Date()) => new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+
+let db = null, sample = null, kids = [], prefs = {}, draft = null, ctl = null;
+$('date').value = localIso();
+
+const ERR = {
+  not_granted: 'Je hebt de pagina geen toestemming gegeven om Claude te gebruiken.',
+  sampling_disabled: 'Claude is niet beschikbaar voor dit account.',
+  rate_limited: 'Even te veel verzoeken of je gebruikslimiet is bereikt. Probeer het later opnieuw.',
+  invalid_json: 'Het antwoord kon niet worden gelezen. Tik nogmaals op Verwerk.',
+  refused: 'Claude kon deze tekst niet verwerken. Pas de tekst aan en probeer opnieuw.',
+  session_expired: 'Log opnieuw in bij Claude.',
+};
+
+function prompt(text, date) {
+  const list = FOODS.filter(([, , , st]) => st !== 'neutraal').map(([id, name, vak, st]) => `${id} | ${name} | ${vak} | ${st}`).join('\n');
+  const known = Object.entries(prefs).map(([term, p]) => `- "${term}" = ${p.food_id} (${p.label})`).join('\n') || '(nog geen)';
+  return `Je zet een vrije beschrijving van wat jonge kinderen (1 tot 4 jaar) aten om naar gestructureerde data voor een voedingslogboek.
+
+Kinderen: ${kids.map((k) => `${k.id} = ${k.name}`).join(', ')}
+Datum: ${date}
+
+Producttypes (id | naam | groep | status in de Schijf van Vijf: in, uit of ?):
+${list}
+
+Bekende producten van dit gezin (gebruik deze en stel er dan geen vraag over):
+${known}
+
+Regels:
+1. Maak per kind en per moment een maaltijd. Momenten: ontbijt, tussen, lunch, avond. Wordt geen kind genoemd, zet de maaltijd dan bij alle kinderen.
+2. Elk ingrediënt apart, ook smeersel en beleg. "2 boterhammen, 1 met boter en 1 met pindakaas" wordt: brood 2 sneden, boter 1 boterham besmeerd, pindakaas 1 boterham besmeerd.
+3. Kies per ingrediënt het best passende food_id uit de lijst; nooit een id buiten de lijst.
+4. Schat grams (ml voor drinken, aantal voor ei) voor een kind van deze leeftijd: snee brood 35, smeersel 5 per boterham, pindakaas of notenpasta 10 per boterham, plakje kaas 15, plakje vleeswaren 11, opscheplepel 50, stuk fruit 100, mandarijn 60, beker 150, plak cake 25. Zet in qty hoe je het zou zeggen ("2 sneden", "1 boterham besmeerd").
+5. Stel een vraag alleen als het antwoord de indeling in of buiten de Schijf verandert (welk brood, boter of margarine, welke pindakaas, puree zelfgemaakt of uit een pakje, welk merkproduct), of als de hoeveelheid van een hoofdbestanddeel onbekend is (vis, vlees, groente, aardappel, pasta, rijst, of fruit dat gedeeld lijkt). Vraag nooit naar de hoeveelheid smeersel of beleg. Eén vraag per onduidelijk product, ook als het vaker voorkomt. Hooguit 6 vragen.
+6. Elke vraag heeft 2 tot 5 korte antwoordopties. Een optie zet food_id en/of grams voor de items in item_keys. Geef bij productvragen een korte "remember"-term (bijv. "brood", "boter", "pindakaas") zodat het antwoord onthouden kan worden.
+7. Wordt er geen drinken genoemd, voeg dan een vraag toe met id "drinken", lege item_keys, en opties met "add": een lijst van {"name","food_id","grams"} die bij elk genoemd kind als drinken worden toegevoegd (bijv. water, halfvolle melk, beide, sap), plus een optie "Weet ik niet" zonder add.
+
+Antwoord met alleen JSON in precies deze vorm:
+{"meals":[{"kid":"k1","moment":"ontbijt","items":[{"key":"i1","name":"boterham","food_id":"brood_onbekend","grams":70,"qty":"2 sneden"}]}],
+ "questions":[{"id":"q1","text":"Welk brood was het?","item_keys":["i1"],"remember":"brood","options":[{"label":"Volkoren","food_id":"brood_volkoren"},{"label":"Wit","food_id":"brood_wit"}]}]}
+
+Tekst:
+"""${text}"""`;
+}
+
+function validate(r) {
+  const meals = (Array.isArray(r?.meals) ? r.meals : []).map((m) => ({
+    kid: kids.some((k) => k.id === m.kid) ? m.kid : null,
+    moment: MOMENT[m.moment] ? m.moment : null,
+    items: (Array.isArray(m.items) ? m.items : []).map((it) => ({
+      key: String(it.key || Math.random()), name: String(it.name || '').slice(0, 80),
+      food_id: F[it.food_id] ? it.food_id : '?', grams: Math.max(0, Number(it.grams) || 0), qty: String(it.qty || '').slice(0, 40),
+    })).filter((it) => it.name),
+  })).flatMap((m) => (m.kid ? [m] : kids.map((k) => ({ ...m, kid: k.id, items: m.items.map((i) => ({ ...i })) }))));
+  const questions = (Array.isArray(r?.questions) ? r.questions : []).slice(0, 7).map((q) => ({
+    id: String(q.id), text: String(q.text || '').slice(0, 160), item_keys: Array.isArray(q.item_keys) ? q.item_keys.map(String) : [],
+    remember: q.remember ? String(q.remember).slice(0, 30).toLowerCase() : '', answer: null,
+    options: (Array.isArray(q.options) ? q.options : []).slice(0, 6).map((o) => ({
+      label: String(o.label || '').slice(0, 40), food_id: F[o.food_id] ? o.food_id : null,
+      grams: Number(o.grams) > 0 ? Number(o.grams) : null,
+      add: Array.isArray(o.add) ? o.add.filter((a) => F[a.food_id]).map((a) => ({ name: String(a.name || F[a.food_id].name), food_id: a.food_id, grams: Math.max(0, Number(a.grams) || 0) })) : [],
+    })).filter((o) => o.label),
+  })).filter((q) => q.text && q.options.length);
+  return { meals, questions };
+}
+
+function applyAnswers() {
+  const meals = structuredClone(draft.meals);
+  for (const q of draft.questions) {
+    const o = q.options[q.answer];
+    if (!o) continue;
+    for (const m of meals) for (const it of m.items) if (q.item_keys.includes(it.key)) {
+      if (o.food_id) it.food_id = o.food_id;
+      if (o.grams) it.grams = o.grams;
+    }
+    if (o.add.length) for (const k of new Set(meals.map((m) => m.kid))) {
+      meals.push({ kid: k, moment: null, items: o.add.map((a) => ({ key: 'd' + Math.random(), name: a.name, food_id: a.food_id, grams: a.grams, qty: '' })) });
+    }
+  }
+  return meals;
+}
+
+function renderDraft() {
+  $('questions').hidden = !draft.questions.length;
+  const ql = $('qlist'); ql.replaceChildren();
+  draft.questions.forEach((q, qi) => {
+    const box = el('div', 'q'); box.append(el('strong', null, q.text));
+    const chips = el('div', 'chips');
+    q.options.forEach((o, oi) => {
+      const b = el('button', 'chip', o.label); b.type = 'button'; b.setAttribute('aria-pressed', String(q.answer === oi));
+      b.onclick = () => { q.answer = q.answer === oi ? null : oi; renderDraft(); };
+      chips.append(b);
+    });
+    box.append(chips); ql.append(box);
+  });
+  const meals = applyAnswers();
+  const box = $('meals'); box.replaceChildren();
+  for (const k of kids) {
+    const mine = meals.filter((m) => m.kid === k.id && m.items.length).sort((a, b) => rank(a.moment) - rank(b.moment));
+    for (const m of mine) {
+      const d = el('div', 'meal'); d.append(el('span', 'mh', `${k.name} · ${MOMENT[m.moment] || 'Drinken en overig'}`));
+      for (const it of m.items) {
+        const r = el('div', 'it'); const dot = el('i', 'dot ' + dotCls(it.food_id)); dot.title = F[it.food_id]?.name || 'Niet herkend';
+        const unit = F[it.food_id]?.vak === 'dranken' || F[it.food_id]?.vak === 'zuivel' ? 'ml' : F[it.food_id]?.vak === 'ei' ? 'st' : 'g';
+        const txt = el('span', 'n'); txt.append(el('span', null, it.name), el('small', null, `${F[it.food_id]?.name || 'Niet herkend'} · ${it.qty ? it.qty + ' · ' : ''}${Math.round(it.grams)} ${unit}`));
+        r.append(dot, txt);
+        const x = el('button', 'x', '×'); x.type = 'button'; x.setAttribute('aria-label', `${it.name} verwijderen`);
+        x.onclick = () => { for (const mm of draft.meals) mm.items = mm.items.filter((i) => !(i.key === it.key && mm.kid === m.kid && mm.moment === m.moment)); renderDraft(); };
+        r.append(x); d.append(r);
+      }
+      box.append(d);
+    }
+  }
+  $('result').hidden = false;
+}
+
+function setBusy(on, msg) {
+  $('go').disabled = on; $('stop').hidden = !on;
+  $('status').hidden = !msg; $('status').textContent = msg || '';
+}
+
+$('go').onclick = async () => {
+  const text = $('text').value.trim();
+  if (!text || !sample) return;
+  ctl = new AbortController();
+  setBusy(true, 'Claude leest mee…');
+  try {
+    const r = await sample.json(prompt(text, $('date').value), { signal: ctl.signal });
+    draft = { ...validate(r), text, date: $('date').value };
+    if (!draft.meals.some((m) => m.items.length)) throw { code: 'empty' };
+    setBusy(false, '');
+    renderDraft();
+  } catch (e) {
+    setBusy(false, e?.code === 'cancelled' ? '' : ERR[e?.code] || 'Er ging iets mis. Tik nogmaals op Verwerk.');
+  }
+};
+$('stop').onclick = () => ctl?.abort();
+$('discard').onclick = () => { draft = null; $('result').hidden = true; $('questions').hidden = true; };
+
+$('save').onclick = async () => {
+  if (!db || !draft) return;
+  $('save').disabled = true;
+  try {
+    const meals = applyAnswers().filter((m) => m.items.length);
+    const input = await db.collection('inputs').add({ text: draft.text, date: draft.date, createdAt: new Date().toISOString() });
+    for (const m of meals) {
+      await db.collection('meals').add({ date: draft.date, kid: m.kid, moment: m.moment, inputId: input.id, createdAt: new Date().toISOString(),
+        items: m.items.map((it) => ({ name: it.name, food: it.food_id, grams: it.grams, qty: it.qty })) });
+    }
+    let changed = false;
+    for (const q of draft.questions) { const o = q.options[q.answer]; if (o?.food_id && q.remember) { prefs[q.remember] = { food_id: o.food_id, label: o.label }; changed = true; } }
+    if (changed) await db.doc('config/prefs').set({ items: prefs });
+    draft = null; $('result').hidden = true; $('questions').hidden = true; $('text').value = '';
+    setBusy(false, 'Opgeslagen.');
+  } catch (e) {
+    setBusy(false, e?.code === 'quota_exceeded' ? 'De opslag is vol.' : 'Opslaan mislukt. Probeer het opnieuw.');
+  } finally { $('save').disabled = false; }
+};
+
+$('saveKids').onclick = async () => {
+  const list = [1, 2].map((i) => ({ id: 'k' + i, name: $('k' + i + 'n').value.trim(), birth: $('k' + i + 'b').value })).filter((k) => k.name);
+  if (!list.length || !db) return;
+  await db.doc('config/kids').set({ list });
+};
+
+function renderSaved(docs) {
+  const box = $('saved'); box.replaceChildren();
+  if (!docs.length) { box.append(el('p', 'note', 'Nog niets opgeslagen.')); return; }
+  let day = '';
+  for (const d of docs) {
+    const m = d.data();
+    if (m.date !== day) { day = m.date; box.append(el('p', 'day', new Date(day + 'T12:00').toLocaleDateString('nl-NL', { weekday: 'long', day: 'numeric', month: 'long' }))); }
+    const k = kids.find((x) => x.id === m.kid);
+    const c = el('div', 'card meal'); c.append(el('span', 'mh', `${k?.name || '?'} · ${MOMENT[m.moment] || 'Drinken en overig'}`));
+    for (const it of m.items || []) { const r = el('div', 'it'); r.append(el('i', 'dot ' + dotCls(it.food)), el('span', 'n', it.name), el('span', 'g', it.qty || `${Math.round(it.grams)}`)); c.append(r); }
+    box.append(c);
+  }
+}
+
+(async () => {
+  const [dbNs, sampleNs] = await Promise.all([claude.use('db'), claude.use('sample')]);
+  db = dbNs; sample = sampleNs;
+  const missing = [!db && 'opslag', !sample && 'Claude'].filter(Boolean);
+  if (missing.length) { $('unavail').hidden = false; $('unavail').textContent = `In deze weergave werkt ${missing.join(' en ')} niet. Open de pagina in de Claude-app of op claude.ai.`; }
+  if (!db) { $('saved').replaceChildren(el('p', 'note', 'Opslag niet beschikbaar.')); return; }
+  const timer = setTimeout(() => { $('saved').replaceChildren(el('p', 'note', 'De opgeslagen gegevens zijn nog niet bereikbaar.')); }, 10000);
+  db.doc('config/kids').onSnapshot((s) => {
+    clearTimeout(timer);
+    kids = s.exists ? s.data().list || [] : [];
+    $('setup').hidden = kids.length > 0; $('entry').hidden = !kids.length || !sample;
+  }, () => clearTimeout(timer));
+  db.doc('config/prefs').onSnapshot((s) => { prefs = s.exists ? s.data().items || {} : {}; });
+  db.collection('meals').orderBy('createdAt', 'desc').limit(40).onSnapshot((s) => {
+    const docs = [...s.docs].sort((a, b) => (b.data().date + b.data().createdAt).localeCompare(a.data().date + a.data().createdAt));
+    renderSaved(docs);
+  }, () => $('saved').replaceChildren(el('p', 'note', 'Opgeslagen gegevens konden niet worden geladen.')));
+})();
+</script>
