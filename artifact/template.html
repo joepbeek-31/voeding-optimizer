@@ -1,108 +1,183 @@
-<title>Kindervoeding Proef</title>
+<title>Kindervoeding</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <style>
-/* Layout: één kolom, invoer bovenaan, vragen en resultaat eronder, opgeslagen maaltijden onderaan. */
+/* Layout: één kolom met drie tabbladen bovenaan (Invoer, Inzichten, Instellingen); kaarten voor invoer, vragen, resultaat en analyses. */
 :root {
   --bg: #F2F5F3; --surface: #FFFFFF; --ink: #15231E; --muted: #5A6963; --line: #D9E1DD;
   --accent: #1E6B58; --on-accent: #FFFFFF; --accent-soft: #DCEDE7;
   --ok: #2C7A4B; --ok-soft: #D9EEDF; --uit: #B2453A; --uit-soft: #F6DDD9; --twijfel: #A66A0C; --twijfel-soft: #F6E9CF;
+  --c1: #1E6B58; --c2: #3B82A6; --c3: #A66A0C; --c4: #B2453A;
   --font: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
   --bg: #0E1614; --surface: #17211E; --ink: #E5EDE9; --muted: #98A8A1; --line: #2A3833;
   --accent: #5FC4A8; --on-accent: #0E1614; --accent-soft: #1D3A32;
-  --ok: #6CCB8E; --ok-soft: #1B3626; --uit: #EE8C80; --uit-soft: #3F211D; --twijfel: #E0AD55; --twijfel-soft: #3A2E15; color-scheme: dark } }
+  --ok: #6CCB8E; --ok-soft: #1B3626; --uit: #EE8C80; --uit-soft: #3F211D; --twijfel: #E0AD55; --twijfel-soft: #3A2E15;
+  --c1: #5FC4A8; --c2: #7DB8D6; --c3: #E0AD55; --c4: #EE8C80; color-scheme: dark } }
 :root[data-theme="dark"] {
   --bg: #0E1614; --surface: #17211E; --ink: #E5EDE9; --muted: #98A8A1; --line: #2A3833;
   --accent: #5FC4A8; --on-accent: #0E1614; --accent-soft: #1D3A32;
-  --ok: #6CCB8E; --ok-soft: #1B3626; --uit: #EE8C80; --uit-soft: #3F211D; --twijfel: #E0AD55; --twijfel-soft: #3A2E15; color-scheme: dark }
+  --ok: #6CCB8E; --ok-soft: #1B3626; --uit: #EE8C80; --uit-soft: #3F211D; --twijfel: #E0AD55; --twijfel-soft: #3A2E15;
+  --c1: #5FC4A8; --c2: #7DB8D6; --c3: #E0AD55; --c4: #EE8C80; color-scheme: dark }
 * { box-sizing: border-box; }
 body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.45 var(--font);
   padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
-main { max-width: 34rem; margin: 0 auto; padding-block: 16px 40px; display: flex; flex-direction: column; gap: 14px; }
+main { max-width: 34rem; margin: 0 auto; padding-block: 14px 40px; display: flex; flex-direction: column; gap: 14px; }
 h1 { font-size: 1.35rem; margin: 0; }
 h2 { font-size: .78rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 6px 0 0; font-weight: 600; }
+.card h2 { margin: 0; }
 p { margin: 0; }
 .note { color: var(--muted); font-size: .92rem; }
+.fine { color: var(--muted); font-size: .8rem; }
 .warn { color: var(--uit); font-size: .92rem; }
 .card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 14px; display: flex; flex-direction: column; gap: 10px; }
-textarea, input, select { font: inherit; color: inherit; width: 100%; min-width: 0; padding: 11px 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); }
-textarea { resize: vertical; min-height: 140px; }
+textarea, input:not([type=checkbox]), select { font: inherit; color: inherit; width: 100%; min-width: 0; padding: 11px 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); }
+textarea { resize: vertical; min-height: 130px; }
+input[type=checkbox] { width: 20px; height: 20px; accent-color: var(--accent); flex: none; }
 .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 .row > * { flex: 1 1 auto; }
 button { font: inherit; color: inherit; cursor: pointer; }
 .btn { border: 0; background: var(--accent); color: var(--on-accent); padding: 12px 16px; border-radius: 12px; font-weight: 600; min-height: 46px; }
 .btn:disabled { opacity: .5; }
 .btn.ghost { background: transparent; color: var(--accent); border: 1px solid var(--line); }
+.btn.danger { background: transparent; color: var(--uit); border: 1px solid var(--line); }
+.btn.small { min-height: 38px; padding: 8px 12px; font-size: .9rem; }
+.link { border: 0; background: none; color: var(--accent); font-weight: 600; padding: 4px 0; min-height: 32px; }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-.q { display: flex; flex-direction: column; gap: 8px; padding-block: 4px; }
-.q + .q { border-top: 1px solid var(--line); padding-top: 12px; }
-.q strong { font-weight: 600; }
+.tabs { display: flex; background: var(--line); border-radius: 12px; padding: 3px; gap: 3px; }
+.tabs button { flex: 1; min-width: 0; border: 0; background: transparent; padding: 9px 4px; border-radius: 9px; font-weight: 600; color: var(--muted); }
+.tabs button[aria-selected="true"] { background: var(--surface); color: var(--ink); }
 .chips { display: flex; flex-wrap: wrap; gap: 8px; }
 .chip { border: 1px solid var(--line); background: var(--bg); padding: 8px 12px; border-radius: 99px; font-size: .92rem; min-height: 40px; }
 .chip[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); font-weight: 600; }
+.q { display: flex; flex-direction: column; gap: 8px; }
+.q + .q { border-top: 1px solid var(--line); padding-top: 12px; }
 .meal { display: flex; flex-direction: column; gap: 4px; }
 .meal + .meal { border-top: 1px solid var(--line); padding-top: 10px; }
-.mh { font-size: .75rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 600; }
+.mh { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: .75rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 600; }
 .it { display: flex; align-items: center; gap: 8px; font-size: .95rem; }
 .it .n { flex: 1; min-width: 0; overflow-wrap: anywhere; display: flex; flex-direction: column; }
-.it .n small { color: var(--muted); font-size: .8rem; }
-.it .g { color: var(--muted); font-size: .85rem; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.it small { color: var(--muted); font-size: .8rem; }
+.it input { width: 84px; flex: none; padding: 8px; text-align: right; }
 .dot { width: 10px; height: 10px; border-radius: 50%; flex: none; background: var(--muted); }
 .dot.in { background: var(--ok); } .dot.uit { background: var(--uit); } .dot.twijfel { background: var(--twijfel); }
 .x { border: 0; background: none; color: var(--muted); font-size: 1.2rem; width: 36px; height: 36px; flex: none; }
 .legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: .8rem; color: var(--muted); }
 .legend span { display: inline-flex; align-items: center; gap: 6px; }
-.saved .day { font-weight: 600; font-size: .9rem; margin-top: 4px; }
+.day { font-weight: 600; font-size: .9rem; margin-top: 4px; }
+.toggle { display: flex; align-items: center; gap: 10px; font-size: .92rem; min-height: 36px; }
+.kidday { display: flex; flex-direction: column; gap: 2px; }
+.kidday + .kidday { border-top: 1px solid var(--line); padding-top: 8px; }
+.tip { border-left: 4px solid var(--twijfel); padding: 2px 0 2px 12px; display: flex; flex-direction: column; gap: 3px; }
+.tip.warn, .tip.drink, .tip.treat, .tip.over { border-left-color: var(--uit); }
+.tip.unsure, .tip.variety, .tip.vitd { border-left-color: var(--muted); }
+.tip + .tip { margin-top: 8px; }
+.tip p { font-size: .92rem; }
+.tip a { font-size: .78rem; color: var(--muted); }
+.grow { display: flex; flex-direction: column; gap: 5px; }
+.grow + .grow { margin-top: 8px; }
+.gt { display: flex; justify-content: space-between; gap: 10px; font-size: .92rem; }
+.gt b { font-weight: 600; }
+.gt span { color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.bar { position: relative; height: 8px; border-radius: 4px; background: var(--line); overflow: hidden; }
+.bar b { position: absolute; inset: 0 auto 0 0; border-radius: 4px; background: var(--muted); }
+.bar .band { position: absolute; top: 0; bottom: 0; min-width: 3px; background: var(--accent-soft); border-inline: 1px solid var(--accent); }
+.bar.ok b { background: var(--ok); } .bar.over b { background: var(--uit); } .bar.under b, .bar.todo b { background: var(--twijfel); }
+.stack { display: flex; height: 14px; border-radius: 7px; overflow: hidden; background: var(--line); }
+.stack i { display: block; height: 100%; }
+.sw { width: 10px; height: 10px; border-radius: 3px; display: inline-block; flex: none; }
+.answer { white-space: pre-wrap; font-size: .95rem; }
 [hidden] { display: none !important; }
 </style>
 
 <main>
-  <header><h1>Kindervoeding</h1><p class="note">Proefversie: typ of dicteer wat de kinderen aten.</p></header>
+  <header class="row" style="justify-content:space-between"><h1>Kindervoeding</h1></header>
+  <nav class="tabs" role="tablist" aria-label="Onderdelen">
+    <button role="tab" data-tab="invoer" aria-selected="true">Invoer</button>
+    <button role="tab" data-tab="inzicht" aria-selected="false">Inzichten</button>
+    <button role="tab" data-tab="instel" aria-selected="false">Instellingen</button>
+  </nav>
   <p id="unavail" class="warn" hidden></p>
 
   <section id="setup" class="card" hidden>
-    <h2>Kinderen</h2>
-    <p class="note">Naam (of bijnaam) en geboortemaand. Dit wordt bewaard in deze pagina.</p>
-    <div class="row"><input id="k1n" placeholder="Naam" aria-label="Naam kind 1"><input id="k1b" type="month" aria-label="Geboortemaand kind 1"></div>
-    <div class="row"><input id="k2n" placeholder="Naam" aria-label="Naam kind 2"><input id="k2b" type="month" aria-label="Geboortemaand kind 2"></div>
-    <button class="btn" id="saveKids">Opslaan</button>
+    <h2>Welkom</h2>
+    <p class="note">Vul eerst je kinderen in onder Instellingen: naam (of bijnaam) en geboortemaand.</p>
+    <button class="btn" data-goto="instel">Naar Instellingen</button>
   </section>
 
-  <section id="entry" class="card" hidden>
-    <label for="text"><h2>Wat hebben ze gegeten?</h2></label>
-    <textarea id="text" placeholder="Bijv. Wouter at 2 boterhammen voor ontbijt, 1 met margarine en 1 met pindakaas. Daarna een mandarijn."></textarea>
-    <p class="note">Tip: tik op de microfoon van je toetsenbord om te dicteren.</p>
-    <div class="row"><input id="date" type="date" aria-label="Datum"><button class="btn" id="go">Verwerk</button></div>
-    <p id="status" class="note" hidden></p>
-    <button class="btn ghost" id="stop" hidden>Stop</button>
-  </section>
+  <div id="view-invoer">
+    <section id="entry" class="card" hidden>
+      <label for="text"><h2>Wat hebben ze gegeten?</h2></label>
+      <textarea id="text" placeholder="Bijv. Wouter at 2 boterhammen voor ontbijt, 1 met margarine en 1 met pindakaas. Daarna een mandarijn."></textarea>
+      <p class="fine">Tip: tik op de microfoon van je toetsenbord om te dicteren.</p>
+      <div class="row"><input id="date" type="date" aria-label="Datum"><button class="btn" id="go">Verwerk</button></div>
+      <p id="status" class="note" hidden></p>
+      <button class="btn ghost" id="stop" hidden>Stop</button>
+    </section>
+    <section id="questions" class="card" hidden><h2>Nog even checken</h2><div id="qlist"></div></section>
+    <section id="result" class="card" hidden>
+      <h2>Dit wordt opgeslagen</h2>
+      <div class="legend"><span><i class="dot in"></i>In de Schijf</span><span><i class="dot uit"></i>Buiten de Schijf</span><span><i class="dot twijfel"></i>Onzeker</span></div>
+      <div id="meals"></div>
+      <div class="row"><button class="btn ghost" id="discard">Weggooien</button><button class="btn" id="save">Opslaan</button></div>
+    </section>
+    <section id="dayflags" class="card" hidden><h2 id="dayflagsTitle">Deze dag</h2><div id="dayflagsList"></div></section>
+    <section style="display:flex;flex-direction:column;gap:10px"><h2>Opgeslagen</h2><div id="saved" style="display:flex;flex-direction:column;gap:10px"><p class="note">Laden…</p></div></section>
+  </div>
 
-  <section id="questions" class="card" hidden><h2>Nog even checken</h2><div id="qlist"></div></section>
+  <div id="view-inzicht" hidden>
+    <div id="insightKids" class="tabs" role="tablist" aria-label="Kind" hidden></div>
+    <div class="chips" id="periods" role="group" aria-label="Periode">
+      <button class="chip" data-days="7" aria-pressed="true">7 dagen</button>
+      <button class="chip" data-days="30" aria-pressed="false">30 dagen</button>
+      <button class="chip" data-days="90" aria-pressed="false">90 dagen</button>
+    </div>
+    <div id="insight"></div>
+  </div>
 
-  <section id="result" class="card" hidden>
-    <h2>Dit wordt opgeslagen</h2>
-    <div class="legend"><span><i class="dot in"></i>In de Schijf</span><span><i class="dot uit"></i>Buiten de Schijf</span><span><i class="dot twijfel"></i>Onzeker</span></div>
-    <div id="meals"></div>
-    <div class="row"><button class="btn ghost" id="discard">Weggooien</button><button class="btn" id="save">Opslaan</button></div>
-  </section>
-
-  <section class="saved" aria-live="polite"><h2>Opgeslagen</h2><div id="saved"><p class="note">Laden…</p></div></section>
+  <div id="view-instel" hidden>
+    <section class="card">
+      <h2>Kinderen</h2>
+      <p class="note">Naam (of bijnaam) en geboortemaand. De leeftijd bepaalt welke norm geldt.</p>
+      <div id="kidRows"></div>
+      <div class="row"><button class="btn ghost" id="addKid">Kind toevoegen</button><button class="btn" id="saveKids">Opslaan</button></div>
+      <p id="kidMsg" class="note" hidden></p>
+    </section>
+    <section class="card">
+      <h2>Onthouden producten</h2>
+      <p class="note">Antwoorden die de app onthoudt, zodat hij er niet opnieuw naar vraagt. Verwijder er een als hij niet meer klopt.</p>
+      <div id="prefList"></div>
+    </section>
+    <section class="card">
+      <h2>Over de berekening</h2>
+      <p class="note" id="normVersion"></p>
+      <p class="note">Producten zijn ingedeeld volgens de criteria per productgroep van het Voedingscentrum. Hangt het oordeel af van het etiket, dan staat een product als onzeker. Grammen per portie zijn schattingen. Producten buiten de Schijf tellen niet mee voor hun groep; vlees telt altijd mee voor de bovengrens.</p>
+      <p class="note">Deze pagina is een hulpmiddel en geen medisch of diëtistisch advies.</p>
+      <div id="sources" class="fine"></div>
+    </section>
+  </div>
 </main>
 
 <script>
-const FOODS = /*FOODS*/[];
-const F = Object.fromEntries(FOODS.map(([id, name, vak, st, swap]) => [id, { id, name, vak, st, swap }]));
+/*BUNDLE*/
+
 const MOMENT = { ontbijt: 'Ontbijt', tussen: 'Tussendoor', lunch: 'Lunch', avond: 'Avondeten' };
 const ORDER = ['ontbijt', 'tussen', 'lunch', 'avond'];
 const rank = (m) => { const i = ORDER.indexOf(m); return i < 0 ? 9 : i; };
 const $ = (id) => document.getElementById(id);
 const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
-const dotCls = (id) => ({ in: 'in', uit: 'uit', '?': 'twijfel' }[F[id]?.st] || 'twijfel');
 const localIso = (d = new Date()) => new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+const today = localIso();
+const numNl = (v, d = 0) => (Math.round(v * 10 ** d) / 10 ** d).toLocaleString('nl-NL');
+const food = (id) => getFood(id, []);
+const unitOf = (id) => { const f = food(id); return f.vak === 'ei' ? 'st' : f.units.at(-1).k === 'ml' ? 'ml' : 'g'; };
+const kidGrp = (k, date = today) => ageGroup(k?.birth, date);
+const dotFor = (id, grp) => ({ in: 'in', uit: 'uit', '?': 'twijfel' }[statusFor(food(id), grp)] || 'twijfel');
+const SRC = Object.fromEntries(SOURCES.map((s) => [s.id, s]));
 
 let db = null, sample = null, kids = [], prefs = {}, draft = null, ctl = null;
-$('date').value = localIso();
+let savedDays = 3, mealDocs = [], dayFlags = {}, editing = null, confirmDel = null, insightKid = null, period = 7, askCtl = null;
+$('date').value = today;
 
 const ERR = {
   not_granted: 'Je hebt de pagina geen toestemming gegeven om Claude te gebruiken.',
@@ -113,12 +188,23 @@ const ERR = {
   session_expired: 'Log opnieuw in bij Claude.',
 };
 
-function prompt(text, date) {
-  const list = FOODS.filter(([, , , st]) => st !== 'neutraal').map(([id, name, vak, st]) => `${id} | ${name} | ${vak} | ${st}`).join('\n');
-  const known = Object.entries(prefs).map(([term, p]) => `- "${term}" = ${p.food_id} (${p.label})`).join('\n') || '(nog geen)';
-  return `Je zet een vrije beschrijving van wat jonge kinderen (1 tot 4 jaar) aten om naar gestructureerde data voor een voedingslogboek.
+// ---------- Tabbladen ----------
+function showTab(t) {
+  for (const b of document.querySelectorAll('.tabs [data-tab]')) b.setAttribute('aria-selected', String(b.dataset.tab === t));
+  for (const v of ['invoer', 'inzicht', 'instel']) $('view-' + v).hidden = v !== t;
+  if (t === 'inzicht') renderInsight();
+}
+for (const b of document.querySelectorAll('[data-tab]')) b.onclick = () => showTab(b.dataset.tab);
+for (const b of document.querySelectorAll('[data-goto]')) b.onclick = () => showTab(b.dataset.goto);
 
-Kinderen: ${kids.map((k) => `${k.id} = ${k.name}`).join(', ')}
+// ---------- Herkennen via Claude ----------
+function ageText(k) { const a = ageYears(k.birth, today); return a === null ? 'leeftijd onbekend' : `${numNl(a, 1)} jaar`; }
+function prompt(text, date) {
+  const list = Object.values(FOODS).filter((f) => f.st !== 'neutraal' && f.st !== 'geen').map((f) => `${f.id} | ${f.name} | ${f.vak} | ${f.st}`).join('\n');
+  const known = Object.entries(prefs).map(([term, p]) => `- "${term}" = ${p.food_id} (${p.label})`).join('\n') || '(nog geen)';
+  return `Je zet een vrije beschrijving van wat jonge kinderen aten om naar gestructureerde data voor een voedingslogboek.
+
+Kinderen: ${kids.map((k) => `${k.id} = ${k.name} (${ageText(k)})`).join(', ')}
 Datum: ${date}
 
 Producttypes (id | naam | groep | status in de Schijf van Vijf: in, uit of ?):
@@ -128,7 +214,7 @@ Bekende producten van dit gezin (gebruik deze en stel er dan geen vraag over):
 ${known}
 
 Regels:
-1. Maak per kind en per moment een maaltijd. Momenten: ontbijt, tussen, lunch, avond. Wordt geen kind genoemd, zet de maaltijd dan bij alle kinderen.
+1. Maak per kind en per moment een maaltijd. Momenten: ontbijt, tussen, lunch, avond; drinken zonder duidelijk moment krijgt moment null. Wordt geen kind genoemd, zet de maaltijd dan bij alle kinderen (kid null).
 2. Elk ingrediënt apart, ook smeersel en beleg. "2 boterhammen, 1 met boter en 1 met pindakaas" wordt: brood 2 sneden, boter 1 boterham besmeerd, pindakaas 1 boterham besmeerd.
 3. Kies per ingrediënt het best passende food_id uit de lijst; nooit een id buiten de lijst.
 4. Schat grams (ml voor drinken, aantal voor ei) voor een kind van deze leeftijd: snee brood 35, smeersel 5 per boterham, pindakaas of notenpasta 10 per boterham, plakje kaas 15, plakje vleeswaren 11, opscheplepel 50, stuk fruit 100, mandarijn 60, beker 150, plak cake 25. Zet in qty hoe je het zou zeggen ("2 sneden", "1 boterham besmeerd").
@@ -150,16 +236,16 @@ function validate(r) {
     moment: MOMENT[m.moment] ? m.moment : null,
     items: (Array.isArray(m.items) ? m.items : []).map((it) => ({
       key: String(it.key || Math.random()), name: String(it.name || '').slice(0, 80),
-      food_id: F[it.food_id] ? it.food_id : '?', grams: Math.max(0, Number(it.grams) || 0), qty: String(it.qty || '').slice(0, 40),
+      food_id: FOODS[it.food_id] ? it.food_id : '?', grams: Math.max(0, Number(it.grams) || 0), qty: String(it.qty || '').slice(0, 40),
     })).filter((it) => it.name),
   })).flatMap((m) => (m.kid ? [m] : kids.map((k) => ({ ...m, kid: k.id, items: m.items.map((i) => ({ ...i })) }))));
   const questions = (Array.isArray(r?.questions) ? r.questions : []).slice(0, 7).map((q) => ({
     id: String(q.id), text: String(q.text || '').slice(0, 160), item_keys: Array.isArray(q.item_keys) ? q.item_keys.map(String) : [],
     remember: q.remember ? String(q.remember).slice(0, 30).toLowerCase() : '', answer: null,
     options: (Array.isArray(q.options) ? q.options : []).slice(0, 6).map((o) => ({
-      label: String(o.label || '').slice(0, 40), food_id: F[o.food_id] ? o.food_id : null,
+      label: String(o.label || '').slice(0, 40), food_id: FOODS[o.food_id] ? o.food_id : null,
       grams: Number(o.grams) > 0 ? Number(o.grams) : null,
-      add: Array.isArray(o.add) ? o.add.filter((a) => F[a.food_id]).map((a) => ({ name: String(a.name || F[a.food_id].name), food_id: a.food_id, grams: Math.max(0, Number(a.grams) || 0) })) : [],
+      add: Array.isArray(o.add) ? o.add.filter((a) => FOODS[a.food_id]).map((a) => ({ name: String(a.name || FOODS[a.food_id].name).slice(0, 60), food_id: a.food_id, grams: Math.max(0, Number(a.grams) || 0) })) : [],
     })).filter((o) => o.label),
   })).filter((q) => q.text && q.options.length);
   return { meals, questions };
@@ -181,10 +267,20 @@ function applyAnswers() {
   return meals;
 }
 
+function itemRow(it, grp, extra) {
+  const r = el('div', 'it');
+  const dot = el('i', 'dot ' + dotFor(it.food_id ?? it.food, grp)); dot.title = food(it.food_id ?? it.food).name;
+  const txt = el('span', 'n');
+  txt.append(el('span', null, it.name), el('small', null, `${food(it.food_id ?? it.food).name} · ${it.qty ? it.qty + ' · ' : ''}${numNl(it.grams)} ${unitOf(it.food_id ?? it.food)}`));
+  r.append(dot, txt);
+  if (extra) r.append(extra);
+  return r;
+}
+
 function renderDraft() {
   $('questions').hidden = !draft.questions.length;
   const ql = $('qlist'); ql.replaceChildren();
-  draft.questions.forEach((q, qi) => {
+  for (const q of draft.questions) {
     const box = el('div', 'q'); box.append(el('strong', null, q.text));
     const chips = el('div', 'chips');
     q.options.forEach((o, oi) => {
@@ -193,21 +289,16 @@ function renderDraft() {
       chips.append(b);
     });
     box.append(chips); ql.append(box);
-  });
+  }
   const meals = applyAnswers();
   const box = $('meals'); box.replaceChildren();
   for (const k of kids) {
-    const mine = meals.filter((m) => m.kid === k.id && m.items.length).sort((a, b) => rank(a.moment) - rank(b.moment));
-    for (const m of mine) {
+    for (const m of meals.filter((x) => x.kid === k.id && x.items.length).sort((a, b) => rank(a.moment) - rank(b.moment))) {
       const d = el('div', 'meal'); d.append(el('span', 'mh', `${k.name} · ${MOMENT[m.moment] || 'Drinken en overig'}`));
       for (const it of m.items) {
-        const r = el('div', 'it'); const dot = el('i', 'dot ' + dotCls(it.food_id)); dot.title = F[it.food_id]?.name || 'Niet herkend';
-        const unit = F[it.food_id]?.vak === 'dranken' || F[it.food_id]?.vak === 'zuivel' ? 'ml' : F[it.food_id]?.vak === 'ei' ? 'st' : 'g';
-        const txt = el('span', 'n'); txt.append(el('span', null, it.name), el('small', null, `${F[it.food_id]?.name || 'Niet herkend'} · ${it.qty ? it.qty + ' · ' : ''}${Math.round(it.grams)} ${unit}`));
-        r.append(dot, txt);
         const x = el('button', 'x', '×'); x.type = 'button'; x.setAttribute('aria-label', `${it.name} verwijderen`);
-        x.onclick = () => { for (const mm of draft.meals) mm.items = mm.items.filter((i) => !(i.key === it.key && mm.kid === m.kid && mm.moment === m.moment)); renderDraft(); };
-        r.append(x); d.append(r);
+        x.onclick = () => { for (const mm of draft.meals) if (mm.kid === m.kid && mm.moment === m.moment) mm.items = mm.items.filter((i) => i.key !== it.key); renderDraft(); };
+        d.append(itemRow(it, kidGrp(k, draft.date), x));
       }
       box.append(d);
     }
@@ -237,6 +328,7 @@ $('go').onclick = async () => {
 };
 $('stop').onclick = () => ctl?.abort();
 $('discard').onclick = () => { draft = null; $('result').hidden = true; $('questions').hidden = true; };
+$('date').onchange = () => renderDayFlags();
 
 $('save').onclick = async () => {
   if (!db || !draft) return;
@@ -258,26 +350,267 @@ $('save').onclick = async () => {
   } finally { $('save').disabled = false; }
 };
 
-$('saveKids').onclick = async () => {
-  const list = [1, 2].map((i) => ({ id: 'k' + i, name: $('k' + i + 'n').value.trim(), birth: $('k' + i + 'b').value })).filter((k) => k.name);
-  if (!list.length || !db) return;
-  await db.doc('config/kids').set({ list });
-};
-
-function renderSaved(docs) {
-  const box = $('saved'); box.replaceChildren();
-  if (!docs.length) { box.append(el('p', 'note', 'Nog niets opgeslagen.')); return; }
-  let day = '';
-  for (const d of docs) {
-    const m = d.data();
-    if (m.date !== day) { day = m.date; box.append(el('p', 'day', new Date(day + 'T12:00').toLocaleDateString('nl-NL', { weekday: 'long', day: 'numeric', month: 'long' }))); }
-    const k = kids.find((x) => x.id === m.kid);
-    const c = el('div', 'card meal'); c.append(el('span', 'mh', `${k?.name || '?'} · ${MOMENT[m.moment] || 'Drinken en overig'}`));
-    for (const it of m.items || []) { const r = el('div', 'it'); r.append(el('i', 'dot ' + dotCls(it.food)), el('span', 'n', it.name), el('span', 'g', it.qty || `${Math.round(it.grams)}`)); c.append(r); }
-    box.append(c);
+// ---------- Dag-instellingen (vitamine D, niet compleet) ----------
+function renderDayFlags() {
+  const date = $('date').value || today;
+  $('dayflags').hidden = !kids.length;
+  $('dayflagsTitle').textContent = date === today ? 'Vandaag' : new Date(date + 'T12:00').toLocaleDateString('nl-NL', { weekday: 'long', day: 'numeric', month: 'long' });
+  const box = $('dayflagsList'); box.replaceChildren();
+  for (const k of kids) {
+    const f = dayFlags[`${date}_${k.id}`] || {};
+    const wrap = el('div', 'kidday');
+    if (kids.length > 1) wrap.append(el('strong', null, k.name));
+    const mk = (key, label) => {
+      const l = el('label', 'toggle'); const c = el('input'); c.type = 'checkbox'; c.checked = !!f[key];
+      c.onchange = async () => { try { await db.doc(`days/${date}_${k.id}`).set({ date, kid: k.id, vitd: key === 'vitd' ? c.checked : !!f.vitd, partial: key === 'partial' ? c.checked : !!f.partial }); } catch { c.checked = !c.checked; } };
+      l.append(c, el('span', null, label)); return l;
+    };
+    if (kidGrp(k, date) === '1-3') wrap.append(mk('vitd', 'Vitamine D gegeven'));
+    wrap.append(mk('partial', 'Niet alles ingevoerd (bijv. opvang)'));
+    box.append(wrap);
   }
 }
 
+// ---------- Opgeslagen maaltijden ----------
+function renderSaved() {
+  const box = $('saved'); box.replaceChildren();
+  const dates = [...new Set(mealDocs.map((d) => d.data().date))];
+  const shown = new Set(dates.slice(0, savedDays));
+  const docs = mealDocs.filter((d) => shown.has(d.data().date));
+  if (!docs.length) { box.append(el('p', 'note', 'Nog niets opgeslagen.')); return; }
+  let day = '';
+  const list = el('div', 'card');
+  for (const d of docs) {
+    const m = d.data();
+    if (m.date !== day) { day = m.date; list.append(el('p', 'day', new Date(day + 'T12:00').toLocaleDateString('nl-NL', { weekday: 'long', day: 'numeric', month: 'long' }))); }
+    const k = kids.find((x) => x.id === m.kid);
+    const grp = kidGrp(k, m.date);
+    const card = el('div', 'meal');
+    const head = el('div', 'mh'); head.append(el('span', null, `${k?.name || '?'} · ${MOMENT[m.moment] || 'Drinken en overig'}`));
+    if (editing?.id !== d.id) {
+      const eb = el('button', 'link', 'Wijzig'); eb.onclick = () => { editing = { id: d.id, moment: m.moment, items: structuredClone(m.items || []) }; confirmDel = null; renderSaved(); };
+      head.append(eb); card.append(head);
+      for (const it of m.items || []) card.append(itemRow(it, grp));
+    } else {
+      card.append(head);
+      const sel = el('select'); sel.setAttribute('aria-label', 'Moment');
+      for (const [v, l] of [...Object.entries(MOMENT), ['', 'Drinken en overig']]) { const o = el('option', null, l); o.value = v; o.selected = (editing.moment || '') === v; sel.append(o); }
+      sel.onchange = () => { editing.moment = sel.value || null; };
+      card.append(sel);
+      editing.items.forEach((it, i) => {
+        const inp = el('input'); inp.type = 'number'; inp.inputMode = 'decimal'; inp.min = '0'; inp.value = String(it.grams); inp.setAttribute('aria-label', `${it.name} in ${unitOf(it.food)}`);
+        inp.onchange = () => { it.grams = Math.max(0, parseFloat(inp.value.replace(',', '.')) || 0); };
+        const x = el('button', 'x', '×'); x.setAttribute('aria-label', `${it.name} verwijderen`); x.onclick = () => { editing.items.splice(i, 1); renderSaved(); };
+        const r = el('div', 'it'); const t = el('span', 'n'); t.append(el('span', null, it.name), el('small', null, `${food(it.food).name} · ${unitOf(it.food)}`));
+        r.append(el('i', 'dot ' + dotFor(it.food, grp)), t, inp, x); card.append(r);
+      });
+      const btns = el('div', 'row');
+      const del = el('button', 'btn danger small', confirmDel === d.id ? 'Zeker? Tik nogmaals' : 'Verwijder maaltijd');
+      del.onclick = async () => { if (confirmDel !== d.id) { confirmDel = d.id; renderSaved(); return; } try { await db.doc('meals/' + d.id).delete(); editing = null; confirmDel = null; } catch { del.textContent = 'Verwijderen mislukt'; } };
+      const cancel = el('button', 'btn ghost small', 'Annuleer'); cancel.onclick = () => { editing = null; confirmDel = null; renderSaved(); };
+      const ok = el('button', 'btn small', 'Bewaar');
+      ok.onclick = async () => {
+        ok.disabled = true;
+        try {
+          if (!editing.items.length) await db.doc('meals/' + d.id).delete();
+          else await db.doc('meals/' + d.id).set({ ...m, moment: editing.moment, items: editing.items });
+          editing = null;
+        } catch { ok.textContent = 'Opslaan mislukt'; ok.disabled = false; }
+      };
+      btns.append(del, cancel, ok); card.append(btns);
+    }
+    list.append(card);
+  }
+  box.append(list);
+  if (dates.length > savedDays) { const more = el('button', 'btn ghost', 'Toon oudere dagen'); more.onclick = () => { savedDays += 7; renderSaved(); }; box.append(more); }
+}
+
+// ---------- Inzichten ----------
+function buildState() {
+  const S = { meals: [], partial: {}, vitd: {}, custom: [] };
+  for (const d of mealDocs) {
+    const m = d.data();
+    S.meals.push({ id: d.id, d: m.date, m: m.moment, it: (m.items || []).map((i) => ({ f: i.food, n: i.name, a: { [m.kid]: i.grams } })) });
+  }
+  for (const [key, f] of Object.entries(dayFlags)) {
+    const k = `${f.date}|${f.kid}`;
+    if (f.partial) S.partial[k] = 1;
+    if (f.vitd) S.vitd[k] = 1;
+  }
+  return S;
+}
+
+function section(title) { const c = el('section', 'card'); c.append(el('h2', null, title)); return c; }
+
+function renderInsight() {
+  const box = $('insight'); box.replaceChildren();
+  const ks = $('insightKids'); ks.replaceChildren(); ks.hidden = kids.length < 2;
+  if (!kids.length) return;
+  if (!kids.some((k) => k.id === insightKid)) insightKid = kids[0].id;
+  for (const k of kids) { const b = el('button', null, k.name); b.setAttribute('role', 'tab'); b.setAttribute('aria-selected', String(k.id === insightKid)); b.onclick = () => { insightKid = k.id; renderInsight(); }; ks.append(b); }
+  const k = kids.find((x) => x.id === insightKid);
+  const grp = kidGrp(k);
+  if (!grp) { box.append(el('p', 'note', `Geen norm beschikbaar voor ${k.name}. Controleer de geboortemaand onder Instellingen.`)); return; }
+  const S = buildState();
+  const a = assessWeek(S, k.id, today, grp, period);
+  if (!a.loggedDays) { box.append(el('p', 'note', `Nog geen invoer voor ${k.name} in deze periode.`)); return; }
+  box.append(el('p', 'note', `${a.loggedDays} van ${period} dagen ingevoerd, waarvan ${a.fullDays} volledig. Per-daggroepen zijn het gemiddelde over de volledige dagen.`));
+
+  // Tips
+  const adv = advise(a, grp);
+  const tips = section('Tips');
+  const tipEl = (x) => { const t = el('div', 'tip ' + x.kind); t.append(el('strong', null, x.title), el('p', null, x.text)); if (SRC[x.src]) { const l = el('a', null, 'Bron: ' + SRC[x.src].title); l.href = SRC[x.src].url; l.target = '_blank'; l.rel = 'noopener'; t.append(l); } return t; };
+  if (!adv.length) tips.append(el('p', 'note', 'Geen aandachtspunten in deze periode.'));
+  adv.slice(0, 3).forEach((x) => tips.append(tipEl(x)));
+  if (adv.length > 3) { const det = el('details'); det.append(el('summary', 'link', `Nog ${adv.length - 3} punten`)); adv.slice(3).forEach((x) => det.append(tipEl(x))); tips.append(det); }
+  tips.append(el('p', 'fine', 'De volgorde en de marges (−20% / +25%) zijn keuzes van de app.'));
+  box.append(tips);
+
+  // Intake
+  const intake = section('Intake');
+  const norms = NORMS[grp];
+  for (const r of a.rows) {
+    const g = GROUPS.find((x) => x.id === r.id);
+    const [min, max] = norms[r.id] || [null, null];
+    if (min === null) continue;
+    const v = r.value || 0;
+    const top = (max || 1) * (g.kind === 'max' ? 1 : 1.25);
+    const row = el('div', 'grow');
+    const gt = el('div', 'gt'); gt.append(el('b', null, (g.derived ? '↳ ' : '') + (g.short || g.label)),
+      el('span', null, `${r.value === null ? '–' : numNl(v, g.unit === 'st' ? 1 : 0)} / ${g.kind === 'max' ? 'max ' : ''}${min === max || g.kind === 'max' ? numNl(max) : `${numNl(min)}–${numNl(max)}`} ${g.unit === 'st' ? '' : g.unit} ${g.period === 'day' ? 'per dag' : 'per week'}`));
+    const bar = el('div', 'bar ' + r.status);
+    if (g.kind !== 'max') { const band = el('i', 'band'); band.style.left = `${(min / top) * 100}%`; band.style.width = `${((max - min) / top) * 100}%`; bar.append(band); }
+    const fill = el('b'); fill.style.width = `${Math.min(100, (v / top) * 100)}%`; bar.append(fill);
+    row.append(gt, bar); intake.append(row);
+  }
+  intake.append(el('p', 'fine', `Norm: ${AGE_LABEL[grp]}, ${NORM_VERSION}.`));
+  box.append(intake);
+
+  // Verhoudingen
+  const ratio = section('Verhoudingen');
+  const items = [];
+  for (const m of S.meals) if (a.dates.includes(m.d)) for (const it of m.it) {
+    const g = it.a[k.id]; if (!g) continue;
+    const f = food(it.f); const st = statusFor(f, grp);
+    if (st === 'neutraal' || st === 'geen') continue;
+    items.push({ f, st, g, m: m.m, n: it.n });
+  }
+  const cnt = (fn) => items.filter(fn).length;
+  const nIn = cnt((x) => x.st === 'in'), nOut = cnt((x) => x.st === 'uit'), nQ = cnt((x) => x.st === '?');
+  const stack = (parts) => { const s = el('div', 'stack'); const tot = parts.reduce((t, p) => t + p[0], 0) || 1; for (const [v, c] of parts) { const i = el('i'); i.style.width = `${(v / tot) * 100}%`; i.style.background = `var(${c})`; s.append(i); } return s; };
+  const legend = (parts) => { const l = el('div', 'legend'); for (const [label, c] of parts) { const s = el('span'); const sw = el('i', 'sw'); sw.style.background = `var(${c})`; s.append(sw, document.createTextNode(label)); l.append(s); } return l; };
+  const pct = (v, t) => `${Math.round((v / (t || 1)) * 100)}%`;
+  ratio.append(el('strong', null, `${pct(nIn, items.length)} van wat ${k.name} at, stond in de Schijf van Vijf`));
+  ratio.append(stack([[nIn, '--ok'], [nQ, '--twijfel'], [nOut, '--uit']]), legend([[`In ${nIn}`, '--ok'], [`Onzeker ${nQ}`, '--twijfel'], [`Buiten ${nOut}`, '--uit']]));
+  ratio.append(el('p', 'fine', 'Geteld per ingevoerd product, niet per gram.'));
+  const mom = el('div'); mom.append(el('strong', null, 'Buiten de Schijf per moment'));
+  for (const key of [...ORDER, null]) {
+    const mi = items.filter((x) => x.m === key); if (!mi.length) continue;
+    const o = mi.filter((x) => x.st === 'uit').length;
+    const row = el('div', 'grow'); const gt = el('div', 'gt'); gt.append(el('span', null, MOMENT[key] || 'Drinken en overig'), el('span', null, `${o} van ${mi.length} (${pct(o, mi.length)})`));
+    const bar = el('div', 'bar over'); const b = el('b'); b.style.width = pct(o, mi.length); bar.append(b); row.append(gt, bar); mom.append(row);
+  }
+  ratio.append(mom);
+  const prot = { vlees: 0, vis: 0, peulvruchten: 0, ei: 0 };
+  for (const x of items) if (prot[x.f.vak] !== undefined) prot[x.f.vak] += x.f.vak === 'ei' ? x.g * 50 : x.g;
+  const pt = Object.values(prot).reduce((s, v) => s + v, 0);
+  if (pt) {
+    const pr = el('div'); pr.append(el('strong', null, 'Eiwitbronnen (vlees, vis, peulvruchten, ei)'));
+    pr.append(stack([[prot.vlees, '--c4'], [prot.vis, '--c2'], [prot.peulvruchten, '--c1'], [prot.ei, '--c3']]));
+    pr.append(legend([[`Vlees ${pct(prot.vlees, pt)}`, '--c4'], [`Vis ${pct(prot.vis, pt)}`, '--c2'], [`Peulvruchten ${pct(prot.peulvruchten, pt)}`, '--c1'], [`Ei ${pct(prot.ei, pt)}`, '--c3']]));
+    pr.append(el('p', 'fine', 'In grammen; een ei telt als 50 g (schatting van de app).'));
+    ratio.append(pr);
+  }
+  if (a.out.length) {
+    const top = el('div'); top.append(el('strong', null, 'Vaakst buiten de Schijf'));
+    for (const e of a.out.slice(0, 5)) {
+      const r = el('div', 'grow'); const gt = el('div', 'gt'); gt.append(el('span', null, [...e.labels].slice(0, 2).join(', ')), el('span', null, `${e.n}×`)); r.append(gt);
+      if (e.food.swap) r.append(el('p', 'fine', e.food.swap));
+      top.append(r);
+    }
+    ratio.append(top);
+  }
+  box.append(ratio);
+
+  // Vraag het Claude
+  const ask = section('Vraag het Claude');
+  ask.append(el('p', 'note', `Stel een vraag over wat ${k.name} at in deze periode, bijvoorbeeld “Hoe vaak at ${k.name} vis?” of “Waar komt het meeste suiker vandaan?”.`));
+  const qi = el('textarea'); qi.style.minHeight = '70px'; qi.setAttribute('aria-label', 'Vraag');
+  const qb = el('button', 'btn', 'Vraag'); const ans = el('p', 'answer');
+  qb.onclick = async () => {
+    const q = qi.value.trim(); if (!q || !sample) return;
+    askCtl?.abort(); askCtl = new AbortController(); qb.disabled = true; ans.textContent = 'Claude denkt na…';
+    const log = S.meals.filter((m) => a.dates.includes(m.d)).sort((x, y) => x.d.localeCompare(y.d) || rank(x.m) - rank(y.m))
+      .map((m) => { const its = m.it.filter((i) => i.a[k.id]); if (!its.length) return ''; return `${m.d} ${MOMENT[m.m] || 'overig'}: ` + its.map((i) => `${i.n} (${food(i.f).name}, ${numNl(i.a[k.id])} ${unitOf(i.f)}, ${statusFor(food(i.f), grp)})`).join('; '); })
+      .filter(Boolean).join('\n');
+    const norm = a.rows.map((r) => { const g = GROUPS.find((x) => x.id === r.id); return `${g.label}: gemeten ${r.value === null ? '-' : numNl(r.value)} ${g.unit} ${g.period === 'day' ? 'gemiddeld per dag' : 'gemiddeld per week'}, norm ${norms[r.id] ? norms[r.id].join('-') : '-'}`; }).join('\n');
+    try {
+      await sample(`Je beantwoordt een vraag van een ouder over wat hun kind ${k.name} (${ageText(k)}) at. Gebruik alleen de gegevens hieronder. Antwoord in het Nederlands, kort en concreet (hooguit 6 zinnen of een korte lijst). Zeg het als de gegevens te weinig zijn voor een antwoord. Geef geen medisch advies. "in/uit/?" betekent in of buiten de Schijf van Vijf of onzeker.
+
+Periode: ${a.dates[0]} t/m ${a.dates.at(-1)} (${a.loggedDays} dagen ingevoerd, ${a.fullDays} volledig)
+Normen Voedingscentrum (${AGE_LABEL[grp]}) en gemeten waarden:
+${norm}
+
+Logboek:
+${log}
+
+Vraag: ${q}`, { signal: askCtl.signal, cache: false, onText: ({ text }) => { ans.textContent = text; } });
+    } catch (e) { ans.textContent = e?.code === 'cancelled' ? '' : ERR[e?.code] || 'Er ging iets mis. Probeer het opnieuw.'; }
+    finally { qb.disabled = false; }
+  };
+  ask.append(qi, qb, ans);
+  if (!sample) { qb.disabled = true; ans.textContent = 'Claude is in deze weergave niet beschikbaar.'; }
+  box.append(ask);
+}
+for (const b of document.querySelectorAll('#periods [data-days]')) b.onclick = () => {
+  period = +b.dataset.days;
+  for (const x of document.querySelectorAll('#periods [data-days]')) x.setAttribute('aria-pressed', String(x === b));
+  renderInsight();
+};
+
+// ---------- Instellingen ----------
+let kidDraft = [];
+function renderKidRows() {
+  const box = $('kidRows'); box.replaceChildren();
+  kidDraft.forEach((k, i) => {
+    const r = el('div', 'row');
+    const n = el('input'); n.placeholder = 'Naam'; n.value = k.name; n.maxLength = 20; n.setAttribute('aria-label', `Naam kind ${i + 1}`); n.oninput = () => { k.name = n.value; };
+    const b = el('input'); b.type = 'month'; b.value = k.birth || ''; b.max = today.slice(0, 7); b.setAttribute('aria-label', `Geboortemaand kind ${i + 1}`); b.onchange = () => { k.birth = b.value; };
+    r.append(n, b); box.append(r);
+  });
+  $('addKid').hidden = kidDraft.length >= 4;
+}
+$('addKid').onclick = () => { const used = new Set(kidDraft.map((k) => k.id)); let i = 1; while (used.has('k' + i)) i++; kidDraft.push({ id: 'k' + i, name: '', birth: '' }); renderKidRows(); };
+$('saveKids').onclick = async () => {
+  const list = kidDraft.map((k) => ({ id: k.id, name: k.name.trim(), birth: k.birth })).filter((k) => k.name);
+  const msg = $('kidMsg'); msg.hidden = false;
+  if (!list.length) { msg.textContent = 'Vul minstens één naam in.'; return; }
+  const dropped = kids.filter((k) => !list.some((x) => x.id === k.id) && mealDocs.some((d) => d.data().kid === k.id));
+  if (dropped.length) { msg.textContent = `${dropped[0].name} heeft al opgeslagen maaltijden; een naam leegmaken verwijdert een kind niet.`; return; }
+  try { await db.doc('config/kids').set({ list }); msg.textContent = list.some((k) => !k.birth) ? 'Opgeslagen. Zonder geboortemaand is er geen norm.' : 'Opgeslagen.'; }
+  catch { msg.textContent = 'Opslaan mislukt.'; }
+};
+function renderPrefs() {
+  const box = $('prefList'); box.replaceChildren();
+  const ent = Object.entries(prefs);
+  if (!ent.length) { box.append(el('p', 'fine', 'Nog niets onthouden.')); return; }
+  for (const [term, p] of ent) {
+    const r = el('div', 'it'); const t = el('span', 'n'); t.append(el('span', null, term), el('small', null, `${p.label} · ${food(p.food_id).name}`));
+    const x = el('button', 'x', '×'); x.setAttribute('aria-label', `${term} vergeten`);
+    x.onclick = async () => { const next = { ...prefs }; delete next[term]; try { await db.doc('config/prefs').set({ items: next }); } catch { /* blijft staan */ } };
+    r.append(el('i', 'dot ' + dotFor(p.food_id, '4-9')), t, x); box.append(r);
+  }
+}
+$('normVersion').textContent = `Normen: ${NORM_VERSION}.`;
+for (const s of SOURCES) { const a = el('a', null, s.title); a.href = s.url; a.target = '_blank'; a.rel = 'noopener'; const p = el('p'); p.append(a); $('sources').append(p); }
+
+// ---------- Opstarten ----------
+function refreshAll() {
+  $('setup').hidden = kids.length > 0;
+  $('entry').hidden = !kids.length || !sample;
+  renderDayFlags(); renderSaved(); renderPrefs();
+  if (!$('view-inzicht').hidden) renderInsight();
+}
 (async () => {
   const [dbNs, sampleNs] = await Promise.all([claude.use('db'), claude.use('sample')]);
   db = dbNs; sample = sampleNs;
@@ -288,12 +621,15 @@ function renderSaved(docs) {
   db.doc('config/kids').onSnapshot((s) => {
     clearTimeout(timer);
     kids = s.exists ? s.data().list || [] : [];
-    $('setup').hidden = kids.length > 0; $('entry').hidden = !kids.length || !sample;
+    kidDraft = kids.length ? structuredClone(kids) : [{ id: 'k1', name: '', birth: '' }, { id: 'k2', name: '', birth: '' }];
+    renderKidRows(); refreshAll();
   }, () => clearTimeout(timer));
-  db.doc('config/prefs').onSnapshot((s) => { prefs = s.exists ? s.data().items || {} : {}; });
-  db.collection('meals').orderBy('createdAt', 'desc').limit(40).onSnapshot((s) => {
-    const docs = [...s.docs].sort((a, b) => (b.data().date + b.data().createdAt).localeCompare(a.data().date + a.data().createdAt));
-    renderSaved(docs);
+  db.doc('config/prefs').onSnapshot((s) => { prefs = s.exists ? s.data().items || {} : {}; renderPrefs(); });
+  db.collection('days').limit(1000).onSnapshot((s) => { dayFlags = Object.fromEntries(s.docs.map((d) => [d.id, d.data()])); renderDayFlags(); if (!$('view-inzicht').hidden) renderInsight(); });
+  db.collection('meals').orderBy('date', 'desc').limit(1000).onSnapshot((s) => {
+    mealDocs = [...s.docs].sort((a, b) => (b.data().date + (b.data().createdAt || '')).localeCompare(a.data().date + (a.data().createdAt || '')));
+    if (editing && !mealDocs.some((d) => d.id === editing.id)) editing = null;
+    refreshAll();
   }, () => $('saved').replaceChildren(el('p', 'note', 'Opgeslagen gegevens konden niet worden geladen.')));
 })();
 </script>

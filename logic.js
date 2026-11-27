@@ -73,12 +73,16 @@ export function dayStats(S, childId, date, grp) {
   return { t, out, unsure, warns, variety, items, treats, zoet, dag, week, snacks: snackMeals.size };
 }
 
-// Beoordeling over de 7 dagen t/m endDate. Dagnormen: gemiddelde over volledig ingevulde dagen.
-export function assessWeek(S, childId, endDate, grp) {
+// Beoordeling over `days` dagen t/m endDate (standaard 7). Dagnormen: gemiddelde over volledig ingevulde dagen.
+// Weeknormen: gemiddelde per week over de periode.
+export function assessWeek(S, childId, endDate, grp, days = 7) {
   const norms = NORMS[grp] || {};
-  const dates = Array.from({ length: 7 }, (_, i) => addDays(endDate, i - 6));
-  const days = dates.map((d) => dayStats(S, childId, d, grp));
-  const full = days.filter((x, i) => x.items && !S.partial[`${dates[i]}|${childId}`]);
+  const dates = Array.from({ length: days }, (_, i) => addDays(endDate, i - days + 1));
+  const dayList = dates.map((d) => dayStats(S, childId, d, grp));
+  const full = dayList.filter((x, i) => x.items && !S.partial[`${dates[i]}|${childId}`]);
+  // Weekgemiddelde over de periode vanaf de eerste ingevoerde dag (minimaal een week), zodat een nieuwe start niet onderschat.
+  const first = dayList.findIndex((x) => x.items);
+  const perWeek = 7 / Math.max(7, first < 0 ? days : days - first);
   const rows = GROUPS.map((g) => {
     const [min, max] = norms[g.id] || [null, null];
     let value, status = 'none';
@@ -86,7 +90,7 @@ export function assessWeek(S, childId, endDate, grp) {
       value = full.length ? full.reduce((s, x) => s + (x.t[g.id] || 0), 0) / full.length : null;
       if (value !== null && min !== null) status = value < min * UNDER ? 'under' : value > max * OVER && !g.noOver ? 'over' : 'ok';
     } else {
-      value = days.reduce((s, x) => s + (x.t[g.id] || 0), 0);
+      value = dayList.reduce((s, x) => s + (x.t[g.id] || 0), 0) * perWeek;
       if (g.kind === 'max') status = value > max ? 'over' : 'ok';
       else if (min !== null) status = value < min ? 'todo' : value > max * OVER ? 'over' : 'ok';
     }
@@ -94,19 +98,19 @@ export function assessWeek(S, childId, endDate, grp) {
   });
   const agg = (key) => {
     const m = new Map();
-    for (const x of days) for (const o of x[key]) {
+    for (const x of dayList) for (const o of x[key]) {
       const k = (o.food.id === '?' ? `?${o.label}` : o.food.id) + (o.w || '');
       const e = m.get(k) || { food: o.food, labels: new Set(), n: 0, g: 0, w: o.w };
       e.labels.add(o.label); e.n++; e.g += o.g; m.set(k, e);
     }
     return [...m.values()].sort((a, b) => b.n - a.n);
   };
-  const sum = (k, arr = days) => arr.reduce((s, x) => s + x[k], 0);
-  const variety = new Set(days.flatMap((x) => [...x.variety]));
+  const sum = (k, arr = dayList) => arr.reduce((s, x) => s + x[k], 0);
+  const variety = new Set(dayList.flatMap((x) => [...x.variety]));
   return {
-    rows, dates, fullDays: full.length, loggedDays: days.filter((x) => x.items).length,
+    rows, dates, days, perWeek, fullDays: full.length, loggedDays: dayList.filter((x) => x.items).length,
     out: agg('out'), unsure: agg('unsure'), warns: agg('warns'),
-    treats: sum('treats'), zoet: sum('zoet'), weekkeuze: sum('week'),
+    treats: sum('treats') * perWeek, zoet: sum('zoet'), weekkeuze: sum('week') * perWeek,
     snacksPerDay: full.length ? sum('snacks', full) / full.length : 0,
     groenteSoorten: [...variety].filter((v) => v.startsWith('groente:')).length,
     fruitSoorten: [...variety].filter((v) => v.startsWith('fruit:')).length,
@@ -117,6 +121,7 @@ export function assessWeek(S, childId, endDate, grp) {
 const GL = Object.fromEntries(GROUPS.map((g) => [g.id, g]));
 const fmt = (v, g) => `${Math.round(v)}${g.unit === 'st' ? '' : ` ${g.unit}`}`;
 const names = (e) => [...e.labels].slice(0, 3).join(', ');
+const nf1 = (v) => (Math.round(v * 10) / 10).toLocaleString('nl-NL');
 
 // Adviezen, belangrijkste eerst. Elk advies verwijst naar een bronpagina (src = id uit SOURCES).
 export function advise(a, grp) {
@@ -139,24 +144,24 @@ export function advise(a, grp) {
       const swap = outs.find((e) => e.food.swap);
       list.push({
         prio: (g.period === 'day' ? 45 : 35) + gap * 25, kind: 'gap', group: r.id,
-        title: `${g.short || g.label}: ${g.period === 'day' ? 'gemiddeld ' : ''}${fmt(r.value || 0, g)} van ${fmt(r.min, g)}${g.period === 'day' ? ' per dag' : ' per week'}`,
+        title: `${g.short || g.label}: gemiddeld ${fmt(r.value || 0, g)} van ${fmt(r.min, g)}${g.period === 'day' ? ' per dag' : ' per week'}`,
         text: swap ? `${names(swap)} telt niet mee, want dat staat niet in de Schijf van Vijf. ${swap.food.swap}` : TIPS[r.id], src: 'svv',
       });
     } else if (r.status === 'over' && g.kind === 'max') {
       list.push({ prio: 45, kind: 'over', group: r.id,
-        title: `${g.short || g.label}: ${fmt(r.value, g)} in 7 dagen, richtlijn maximaal ${fmt(r.max, g)}`, text: TIPS[r.id], src: 'svv' });
+        title: `${g.short || g.label}: gemiddeld ${fmt(r.value, g)} per week, richtlijn maximaal ${fmt(r.max, g)}`, text: TIPS[r.id], src: 'svv' });
     }
   }
   if (a.zoet) {
-    list.push({ prio: 72, kind: 'drink', title: `Zoete dranken: ${a.zoet}× in 7 dagen`,
+    list.push({ prio: 72, kind: 'drink', title: `Zoete dranken: ${a.zoet}× in ${a.days} dagen`,
       text: 'Water is de beste dorstlesser. Sap, diksap, limonade en frisdrank kun je beter niet geven.', src: 'drinken' });
   }
   if (grp === '1-3' && a.treats > 1) {
-    list.push({ prio: 62, kind: 'treat', title: `Snoep, koek, chips of ijs: ${a.treats}× in 7 dagen`,
+    list.push({ prio: 62, kind: 'treat', title: `Snoep, koek, chips of ijs: gemiddeld ${nf1(a.treats)}× per week`,
       text: 'Geef dit eerder één keer per week dan één keer per dag, en houd het klein (minder dan 75 kcal).', src: 'tussendoor' });
   }
   if (a.weekkeuze > 3) {
-    list.push({ prio: 55, kind: 'week', title: `Weekkeuzes: ${a.weekkeuze}× in 7 dagen`,
+    list.push({ prio: 55, kind: 'week', title: `Weekkeuzes: gemiddeld ${nf1(a.weekkeuze)}× per week`,
       text: 'Het Voedingscentrum adviseert maximaal 3 weekkeuzes per week, zoals vleeswaren, frisdrank, sap, krentenbollen of grote koeken.', src: 'watstaat' });
   }
   if (grp === '1-3' && a.snacksPerDay > 2) {
@@ -164,7 +169,7 @@ export function advise(a, grp) {
       text: 'Geef bij voorkeur niet vaker dan 2 keer iets extra’s, zodat je kind trek houdt in de hoofdmaaltijden. Water kan altijd.', src: 'tussendoor' });
   }
   if (grp === '1-3' && a.loggedDays >= 3 && a.vitd < a.loggedDays) {
-    list.push({ prio: 35, kind: 'vitd', title: `Vitamine D afgevinkt op ${a.vitd} van ${a.loggedDays} ingevulde dagen`,
+    list.push({ prio: 35, kind: 'vitd', title: `Vitamine D afgevinkt op ${a.vitd} van ${a.loggedDays} ingevoerde dagen`,
       text: 'Je kind heeft tot 4 jaar extra vitamine D nodig.', src: 'menu' });
   }
   for (const e of a.out) {
@@ -175,8 +180,8 @@ export function advise(a, grp) {
     list.push({ prio: 20, kind: 'unsure', title: `Onzeker of het in de Schijf staat: ${a.unsure.slice(0, 4).map(names).join(', ')}`,
       text: 'Controleer het etiket of zoek het op in de Kies Ik Gezond?-app. Pas daarna de indeling aan onder Producten.', src: 'watstaat' });
   }
-  if (a.fullDays >= 4 && a.groenteSoorten < 3) {
-    list.push({ prio: 15, kind: 'variety', title: `${a.groenteSoorten} soort${a.groenteSoorten === 1 ? '' : 'en'} groente in 7 dagen`,
+  if (a.fullDays >= 4 && a.groenteSoorten < (a.days > 7 ? 5 : 3)) {
+    list.push({ prio: 15, kind: 'variety', title: `${a.groenteSoorten} soort${a.groenteSoorten === 1 ? '' : 'en'} groente in ${a.days} dagen`,
       text: 'Varieer volop met groente.', src: 'avond' });
   }
   return list.sort((x, y) => y.prio - x.prio);
