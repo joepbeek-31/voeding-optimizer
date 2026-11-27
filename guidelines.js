@@ -11,10 +11,18 @@ export const SOURCES = [
     url: 'https://www.voedingscentrum.nl/nl/zwanger-en-kind/dreumes-en-peuter/wat-geef-ik-te-drinken-.aspx' },
   { id: 'menu', title: 'Voorbeeld dagmenu voor dreumes en peuter',
     url: 'https://www.voedingscentrum.nl/nl/zwanger-en-kind/dreumes-en-peuter/voorbeelddagmenu-voor-dreumes-en-peuter.aspx' },
+  { id: 'tussendoor', title: 'Wat kan ik tussendoor geven?',
+    url: 'https://www.voedingscentrum.nl/nl/zwanger-en-kind/dreumes-en-peuter/wat-kan-ik-tussendoor-geven-.aspx' },
+  { id: 'avond', title: 'Wat geef ik als avondeten en toetje?',
+    url: 'https://www.voedingscentrum.nl/nl/zwanger-en-kind/dreumes-en-peuter/wat-geef-ik-als-avondeten.aspx' },
+  { id: 'criteria', title: 'Criteria per productgroep (Schijf van Vijf, 9 april 2026)',
+    url: 'https://www.voedingscentrum.nl/professionals/schijf-van-vijf/onderbouwing-schijf-van-vijf/productgroepen-en-criteria/criteria-per-productgroep.aspx' },
+  { id: 'watstaat', title: 'Wat staat er in de Schijf van Vijf, en wat niet?',
+    url: 'https://www.voedingscentrum.nl/nl/gezond-eten-met-de-schijf-van-vijf/wat-staat-in-de-schijf-van-vijf-en-wat-niet.aspx' },
 ];
 export const NORM_VERSION = 'Voedingscentrum, Schijf van Vijf 2026 (geraadpleegd 24-11-2026)';
 
-// period: 'day' = per dag, 'week' = per week. kind: 'range' = richtlijn, 'max' = bovengrens, 'count' = alleen tellen.
+// period: 'day' = per dag, 'week' = per week. kind: 'range' = richtlijn, 'max' = bovengrens.
 export const GROUPS = [
   { id: 'groente', label: 'Groente', unit: 'g', period: 'day', kind: 'range', step: 10, noOver: true },
   { id: 'fruit', label: 'Fruit', unit: 'g', period: 'day', kind: 'range', step: 10 },
@@ -30,7 +38,6 @@ export const GROUPS = [
   { id: 'ei', label: 'Eieren', unit: 'st', period: 'week', kind: 'range', step: 0.5 },
   { id: 'vlees', label: 'Vlees', unit: 'g', period: 'week', kind: 'max', step: 10 },
   { id: 'roodvlees', label: 'waarvan rood vlees', unit: 'g', period: 'week', kind: 'max', derived: true },
-  { id: 'buiten', label: 'Buiten de Schijf van Vijf', short: 'Buiten de Schijf', unit: 'x', period: 'week', kind: 'count', step: 1 },
 ];
 
 // [min, max] per leeftijdsgroep. Dranken in ml (bron: 1 liter resp. 1,2-1,4 liter).
@@ -44,24 +51,6 @@ export const NORMS = {
     peulvruchten: [190, 190], vis: [75, 75], ei: [1, 2], vlees: [0, 225], roodvlees: [0, 100] },
 };
 export const AGE_LABEL = { '1-3': '1 t/m 3 jaar', '4-9': '4 t/m 9 jaar' };
-
-// Snelkeuzes. De hoeveelheden zijn schattingen van de app, geen Voedingscentrum-cijfers; pas ze bij invoer aan.
-export const PRESETS = {
-  groente: [['Opscheplepel groente', 50], ['Snoepgroente', 30], ['Groente op brood', 20]],
-  fruit: [['Stuk fruit', 100], ['Half stuk fruit', 50], ['Handje klein fruit', 50]],
-  brood: [['Volkoren boterham', 35], ['Halve boterham', 18], ['Havermout of muesli', 20]],
-  graan: [['Opscheplepel pasta of rijst', 50], ['Kleine aardappel', 50]],
-  zuivel: [['Beker melk', 150, { drink: 150 }], ['Schaaltje yoghurt', 150], ['Sojadrink verrijkt', 100, { drink: 100 }]],
-  kaas: [['Zachte kaas op 1 boterham', 15]],
-  vetten: [['Halvarine op 1 boterham', 5], ['Eetlepel olie (bereiding)', 10]],
-  noten: [['Notenpasta op 1 boterham', 15]],
-  dranken: [['Beker water', 150], ['Beker thee', 150], ['Slokjes water', 50]],
-  peulvruchten: [['Opscheplepel peulvruchten', 60], ['Tofu of tempé', 50]],
-  vis: [['Portie vis', 50], ['Vis op brood', 20]],
-  ei: [['Ei', 1], ['Half ei', 0.5]],
-  vlees: [['Kip of kalkoen', 50], ['Rood vlees', 50, { red: true }], ['Vleeswaren op brood', 15, { red: true }]],
-  buiten: [['Koekje of snoep', 1], ['Zoet beleg', 1], ['Sap of limonade', 1], ['Hartige snack', 1]],
-};
 
 // Tips zijn suggesties van de app (geen citaten van het Voedingscentrum).
 export const TIPS = {
@@ -90,5 +79,8 @@ export const WARNINGS = [
   ['Geen smeerleverworst of paté (veel vitamine A).', 'niet'],
   ['Water is de beste dorstlesser. Sap, diksap, limonade en frisdrank liever niet.', 'drinken'],
   ['Halfvolle of magere zuivel; speciale peuter- of dreumesmelk is niet nodig.', 'drinken'],
+  ['Geef tussendoor bij voorkeur niet vaker dan 2 keer iets extra’s; water kan altijd.', 'tussendoor'],
+  ['Snoep, koek of ijs eerder één keer per week dan één keer per dag, en houd het klein (minder dan 75 kcal).', 'tussendoor'],
+  ['Geen hele noten of pinda’s onder 4 jaar; halveer druiven en snoeptomaatjes.', 'tussendoor'],
   ['De hoeveelheden zijn gemiddelden: het laagste getal past meer bij 1 jaar, het hoogste bij 3 jaar. Dring geen eten op.', 'dp'],
 ];

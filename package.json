@@ -1,1 +1,1 @@
-{ "name": "claude-food", "private": true, "type": "module", "scripts": { "test": "node --test", "preview": "node tools/build-preview.mjs" } }
+{ "name": "voeding-optimizer", "private": true, "type": "module", "scripts": { "test": "node --test", "preview": "node tools/build-preview.mjs" } }
